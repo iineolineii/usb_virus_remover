@@ -1,0 +1,113 @@
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import wsh_disabler
+from admin_tools import is_admin, restart_as_admin
+from wsh_disabler import wsh_is_enabled, restrict_machine, restrict_users
+
+
+# Restart the antivirus with the Administrator privelegies
+if not is_admin():
+    tempdir = restart_as_admin(__file__, window_title="ANTIVIRUS")
+    # Bring along dependencies
+    shutil.copy(wsh_disabler.__file__, tempdir)
+    sys.exit()
+
+
+def delete_virus_folder(username: str) -> None:
+    virus_folder = Path(f"C:\\Users\\{username}\\AppData\\Roaming\\WindowsServices")
+    if virus_folder.is_dir():
+        # NOTE: For some reason Python gets permission denied
+        # to delete this folder so we're using cmd here instead
+        os.system(f"rmdir /S /Q {virus_folder}")
+        print(f"✅ The virus folder {virus_folder} was successfully deleted.")
+
+    virus_folder.unlink(missing_ok=True) # In case if WindowsServices is a file
+
+
+def clear_startup(username: str) -> None:
+    startup_path = Path(f"C:\\Users\\{username}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup")
+    possible_viruses = startup_path.glob("helper*")
+
+    for virus_startup in possible_viruses:
+        try:
+            virus_startup.unlink()
+            print(f"✅ {virus_startup.name} was successfully removed from shell:startup.")
+        except Exception as e:
+            print(f"❌ Failed to remove {virus_startup} from shell:startup: {e}")
+
+    # Open shell:startup
+    os.system(f"explorer.exe {startup_path}")
+
+
+def execute(
+    command: str,
+    success_message: str = "",
+    failure_message: str = "",
+    *,
+    shell = False
+):
+    """
+    Execute a command and return its output.
+    """
+    try:
+        result = subprocess.run(command, shell=shell, encoding="cp866", text=True, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip() if e.stderr else ""
+        print("\n❌ ", failure_message, ": ", stderr, sep="")
+    else:
+        stdout = result.stdout.strip() if result.stdout else ""
+        print("\n", success_message, ": ", stdout, sep="")
+
+
+if __name__ == "__main__":
+    # Previous username should be pointed to argv on restarting
+    username = sys.argv[1]
+
+    # Remove previous user from the Administrators group
+    # execute(
+    #     f"net localgroup \"Администраторы\" /delete {username}",
+    #     f"🛡️ {username} removed from the Administrators group",
+    #     "Failed to remove user from the Administrators group"
+    # )
+
+    # Disable password expiry
+    execute(
+        "net accounts /maxpwage:unlimited",
+        "🔑 Password expiry disabled",
+        "Failed to disable password expiry"
+    )
+
+    # Kill Windows Script Host processes
+    execute(
+        "taskkill /F /IM wscript.exe",
+        "🧩 wscript.exe was successfully terminated",
+        "Windows Script Host is not running"
+    )
+
+
+    # Delete the virus folder
+    delete_virus_folder(username)
+
+    # Clear shell:startup
+    clear_startup(username)
+
+
+    # Disable Windows Script Host for all local users
+    restrict_users()
+
+    # Disable Windows Script Host system-wide
+    restrict_machine()
+
+    # Check disabled Windows Script Host
+    if wsh_is_enabled(
+        title   = "Предупреждение о безопасности",
+        message = (
+            "Обратите внимание: Windows Script Host включен на этом компьютере. "
+            "Это может создать дополнительные риски для безопасности."
+        )
+    ):
+        raise RuntimeError("Windows Script Host was not disabled!")
