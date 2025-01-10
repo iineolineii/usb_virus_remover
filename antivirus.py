@@ -23,7 +23,7 @@ def delete_virus_folder(username: str) -> None:
         # NOTE: For some reason Python gets permission denied
         # to delete this folder so we're using cmd here instead
         os.system(f"rmdir /S /Q {virus_folder}")
-        print(f"✅ The virus folder {virus_folder} was successfully deleted.")
+        print(f"[SUCCESS] The virus folder {virus_folder} was successfully deleted.")
 
     virus_folder.unlink(missing_ok=True) # In case if WindowsServices is a file
 
@@ -35,9 +35,9 @@ def clear_startup(username: str) -> None:
     for virus_startup in possible_viruses:
         try:
             virus_startup.unlink()
-            print(f"✅ {virus_startup.name} was successfully removed from shell:startup.")
+            print(f"[SUCCESS] {virus_startup.name} was successfully removed from shell:startup.")
         except Exception as e:
-            print(f"❌ Failed to remove {virus_startup} from shell:startup: {e}")
+            print(f"[ERROR] Failed to remove {virus_startup} from shell:startup: {e}")
 
     # Open shell:startup
     os.system(f"explorer.exe {startup_path}")
@@ -57,10 +57,10 @@ def execute(
         result = subprocess.run(command, shell=shell, encoding="cp866", text=True, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         stderr = e.stderr.strip() if e.stderr else ""
-        print("\n❌ ", failure_message, ": ", stderr, sep="")
+        print("\n[ERROR] ", failure_message, ": ", stderr, sep="")
     else:
         stdout = result.stdout.strip() if result.stdout else ""
-        print("\n", success_message, ": ", stdout, sep="")
+        print("\n[SUCCESS] ", success_message, ": ", stdout, sep="")
 
 
 if __name__ == "__main__":
@@ -68,23 +68,23 @@ if __name__ == "__main__":
     username = sys.argv[1]
 
     # Remove previous user from the Administrators group
-    # execute(
-    #     f"net localgroup \"Администраторы\" /delete {username}",
-    #     f"🛡️ {username} removed from the Administrators group",
-    #     "Failed to remove user from the Administrators group"
-    # )
+    execute(
+        f"net localgroup \"Administrators\" /delete {username}",
+        f"🛡️ {username} removed from the Administrators group",
+        "Failed to remove user from the Administrators group"
+    )
 
     # Disable password expiry
     execute(
         "net accounts /maxpwage:unlimited",
-        "🔑 Password expiry disabled",
+        "Password expiry disabled",
         "Failed to disable password expiry"
     )
 
     # Kill Windows Script Host processes
     execute(
         "taskkill /F /IM wscript.exe",
-        "🧩 wscript.exe was successfully terminated",
+        "wscript.exe was successfully terminated",
         "Windows Script Host is not running"
     )
 
@@ -104,10 +104,10 @@ if __name__ == "__main__":
 
     # Check disabled Windows Script Host
     if wsh_is_enabled(
-        title   = "Предупреждение о безопасности",
+        title   = "Security Warning",
         message = (
-            "Обратите внимание: Windows Script Host включен на этом компьютере. "
-            "Это может создать дополнительные риски для безопасности."
+            "Please note that Windows Script Host is enabled on this computer. "
+            "This may create additional security risks."
         )
     ):
         raise RuntimeError("Windows Script Host was not disabled!")

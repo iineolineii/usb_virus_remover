@@ -68,29 +68,29 @@ def restrict_users():
                 continue
 
             FULL_PROFILE_SIDS.append(sid)
-            print(f"\n💡 Found SID: {repr(sid)}")
+            print(f"\n[INFO] Found SID: {repr(sid)}")
 
             result, message = process_sid(sid)
             if result:
                 succeeded.append(sid)
-                print(f"✅ {message}")
+                print(f"[SUCCESS] {message}")
             else:
-                print(f"❌ {message}")
+                print(f"[ERROR] {message}")
 
     if not succeeded:
         print(f"\n🚫 Could not disable Windows Script Host for any users.")
     else:
-        print(f"\n✅ Successfully disabled Windows Script Host for {len(succeeded)}/{len(FULL_PROFILE_SIDS)} SID(s).")
+        print(f"\n[SUCCESS] Successfully disabled Windows Script Host for {len(succeeded)}/{len(FULL_PROFILE_SIDS)} SID(s).")
 
 
 def restrict_machine():
-    print(f"\n💡 Disabling Windows Script Host system-wide...")
+    print(f"\n[INFO] Disabling Windows Script Host system-wide...")
 
     result, message = disable_wsh()
     if result:
-        print(f"✅ {message}")
+        print(f"[SUCCESS] {message}")
     else:
-        print(f"❌ {message}")
+        print(f"[ERROR] {message}")
 
 
 def load_ntuser_dat(sid: str, profile_image_path: str) -> Tuple[bool, str]:
@@ -166,13 +166,13 @@ def process_sid(sid: str) -> Tuple[bool, str]:
         result, message = disable_wsh(sid)
         if result:
             return True, message
-        print("❌", message)
+        print("[ERROR]", message)
 
         profile_image_path, _ = winreg.QueryValueEx(sid_key, "ProfileImagePath")
         result, message = load_ntuser_dat(sid, profile_image_path)
         if not result:
             return False, message
-        print("✅", message)
+        print("[SUCCESS]", message)
 
         try:
             result, message = disable_wsh(sid)
