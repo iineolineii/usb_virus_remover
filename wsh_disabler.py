@@ -78,7 +78,7 @@ def restrict_users():
                 print(f"[ERROR] {message}")
 
     if not succeeded:
-        print(f"\n🚫 Could not disable Windows Script Host for any users.")
+        print(f"\n[ERROR] Could not disable Windows Script Host for any users.")
     else:
         print(f"\n[SUCCESS] Successfully disabled Windows Script Host for {len(succeeded)}/{len(FULL_PROFILE_SIDS)} SID(s).")
 
