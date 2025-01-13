@@ -73,7 +73,7 @@ def restart_as_admin(script_path: str, *, window_title: Optional[str] = None) ->
     shutil.copy(__file__, tempdir)
 
     # Make a restart command
-    python   = str(Path(sys.executable).with_name("python.exe")) # IDLE Support
+    python   = f'"{str(Path(sys.executable).with_name("python.exe"))}"' # IDLE Support
     script   = f'"{temporary_copy}"'
     username = f'"{os.getlogin() }"'
     command = [python, script, username]
