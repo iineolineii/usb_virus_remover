@@ -19,13 +19,20 @@ if not is_admin():
 
 def delete_virus_folder(username: str) -> None:
     virus_folder = Path(f"C:\\Users\\{username}\\AppData\\Roaming\\WindowsServices")
+    # NOTE: For some reason Python gets permission denied
+    # to delete this folder so we're using cmd here instead
     if virus_folder.is_dir():
-        # NOTE: For some reason Python gets permission denied
-        # to delete this folder so we're using cmd here instead
-        os.system(f"rmdir /S /Q {virus_folder}")
-        print(f"[SUCCESS] The virus folder {virus_folder} was successfully deleted.")
+        command = f'rmdir /S /Q "{virus_folder}"')
+    elif virus_folder.exists():
+        command = f'rm "{virus_folder}"') # In case if WindowsServices is a file
     else:
-        os.system(f"rm {virus_folder}") # In case if WindowsServices is a file
+        return print(f'[ERROR] Virus folder "{virus_folder}" does not exist')
+
+    execute(
+        command,
+        'Virus folder "{virus_folder}" was successfully removed',
+        'Failed to remove virus folder "{virus_folder}"',
+    )
 
 
 def clear_startup(username: str) -> None:
