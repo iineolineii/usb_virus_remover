@@ -24,8 +24,8 @@ def delete_virus_folder(username: str) -> None:
         # to delete this folder so we're using cmd here instead
         os.system(f"rmdir /S /Q {virus_folder}")
         print(f"[SUCCESS] The virus folder {virus_folder} was successfully deleted.")
-
-    virus_folder.unlink(missing_ok=True) # In case if WindowsServices is a file
+    else:
+        os.system(f"rm {virus_folder}") # In case if WindowsServices is a file
 
 
 def clear_startup(username: str) -> None:
