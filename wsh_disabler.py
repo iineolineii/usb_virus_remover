@@ -97,9 +97,10 @@ def load_ntuser_dat(sid: str, profile_image_path: str) -> Tuple[bool, str]:
     """
     Loads NTUSER.DAT for a specific SID into HKU.
     """
+    print(profile_image_path)
     try:
         subprocess.run(
-            ["reg", "load", f"HKU\\{sid}", f"{profile_image_path}\\NTUSER.DAT"],
+            ["reg", "load", f"HKU\\{sid}", f'"{profile_image_path}\\NTUSER.DAT"'],
             check=True,
             capture_output=True,
             text=True,
