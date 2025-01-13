@@ -69,8 +69,8 @@ if __name__ == "__main__":
 
     # Remove previous user from the Administrators group
     execute(
-        f"net localgroup \"Administrators\" /delete {username}",
-        f"🛡️ {username} removed from the Administrators group",
+        f"net localgroup \"Administrators\" /delete \"{username}\"",
+        f"{username} removed from the Administrators group",
         "Failed to remove user from the Administrators group"
     )
 
